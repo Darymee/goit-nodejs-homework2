@@ -11,10 +11,7 @@ const contactsPath = path.resolve(
 const listContacts = async () => {
   try {
     const contactsListRaw = await fs.readFile(contactsPath);
-    const contactList = JSON.parse(contactsListRaw);
-    console.log(contactsPath);
-    console.log(contactList);
-    return contactList;
+    return JSON.parse(contactsListRaw);
   } catch (error) {
     console.error(error);
   }
