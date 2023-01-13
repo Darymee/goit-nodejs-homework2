@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   newContactValidation,
   updateContactValidation,
+  updateStatusContactValidation,
 } = require("../../schemas/contacts");
 
 const { validationCheck, tryCatchWrapper } = require("../../middlewares/index");
@@ -14,6 +15,7 @@ const {
   createContact,
   deleteContact,
   updateContact,
+  updateStatusContact,
 } = require("../../controllers/contactsControllers");
 
 router.get("/", tryCatchWrapper(getContacts));
@@ -32,6 +34,11 @@ router.put(
   "/:id",
   validationCheck(updateContactValidation),
   tryCatchWrapper(updateContact)
+);
+router.patch(
+  "/:id/favorite",
+  validationCheck(updateStatusContactValidation),
+  tryCatchWrapper(updateStatusContact)
 );
 
 module.exports = router;

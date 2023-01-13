@@ -1,14 +1,16 @@
-const db = require("../models/contacts");
+const { Contact } = require("../models/contacts");
 
 async function getContacts(req, res, next) {
-  const contacts = await db.listContacts();
+  const contacts = await Contact.find({});
+
   return res.status(200).json(contacts);
 }
 
 async function getContact(req, res, next) {
   const { id } = req.params;
 
-  const contact = await db.getContactById(id);
+  const contact = await Contact.findById(id);
+
   if (!contact) {
     return next(res.status(404).json({ message: "Not found" }));
   }
@@ -16,21 +18,21 @@ async function getContact(req, res, next) {
 }
 
 async function createContact(req, res, next) {
-  const { name, email, phone } = req.body;
+  const { name, email, phone, favorite } = req.body;
 
-  const newContact = await db.addContact(name, email, phone);
+  const newContact = await Contact.create({ name, email, phone, favorite });
   return res.status(201).json(newContact);
 }
 
 async function deleteContact(req, res, next) {
   const { id } = req.params;
 
-  const contact = await db.getContactById(id);
+  const contact = await Contact.findById(id);
 
   if (!contact) {
     return res.status(404).json({ message: "Not found" });
   }
-  await db.removeContact(id);
+  await Contact.findByIdAndRemove(id);
 
   return res.status(200).json({ message: "contact deleted" });
 }
@@ -39,7 +41,9 @@ async function updateContact(req, res, next) {
   const { id } = req.params;
   const body = req.body;
 
-  const updateContacts = await db.updateContact(id, body);
+  const updateContacts = await Contact.findByIdAndUpdate(id, body, {
+    new: true,
+  });
 
   if (!updateContacts) {
     return res.status(404).json({ message: "Not found" });
@@ -48,10 +52,29 @@ async function updateContact(req, res, next) {
   return res.status(200).json(updateContacts);
 }
 
+async function updateStatusContact(req, res, next) {
+  const { id } = req.params;
+  const body = req.body;
+
+  if (!body) {
+    return res.status(400).json({ message: "missing field favorite" });
+  }
+
+  const updateFavoriteContact = await Contact.findByIdAndUpdate(id, body, {
+    new: true,
+  });
+
+  if (!updateFavoriteContact) {
+    return res.status(404).json({ message: "Not found" });
+  }
+  return res.status(200).json(updateFavoriteContact);
+}
+
 module.exports = {
   getContacts,
   getContact,
   createContact,
   deleteContact,
   updateContact,
+  updateStatusContact,
 };
