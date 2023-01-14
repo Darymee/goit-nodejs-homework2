@@ -27,12 +27,11 @@ async function createContact(req, res, next) {
 async function deleteContact(req, res, next) {
   const { id } = req.params;
 
-  const contact = await Contact.findById(id);
+  const contact = await Contact.findByIdAndRemove(id);
 
   if (!contact) {
     return res.status(404).json({ message: "Not found" });
   }
-  await Contact.findByIdAndRemove(id);
 
   return res.status(200).json({ message: "contact deleted" });
 }

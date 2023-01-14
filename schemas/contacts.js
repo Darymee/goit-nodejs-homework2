@@ -8,10 +8,10 @@ const newContactValidation = joi.object({
 });
 
 const updateContactValidation = joi.object({
-  name: joi.string().min(3).required(),
-  email: joi.string().min(6).required(),
-  phone: joi.string().min(6).required(),
-  favorite: joi.boolean().required(),
+  name: joi.string().min(3),
+  email: joi.string().min(6),
+  phone: joi.string().min(6),
+  favorite: joi.boolean(),
 });
 
 const updateStatusContactValidation = joi.object({
