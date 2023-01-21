@@ -7,7 +7,11 @@ const {
   updateStatusContactValidation,
 } = require("../../schemas/contacts");
 
-const { validationCheck, tryCatchWrapper } = require("../../middlewares/index");
+const {
+  validationCheck,
+  tryCatchWrapper,
+  tokenValidation,
+} = require("../../middlewares/index");
 
 const {
   getContacts,
@@ -18,25 +22,36 @@ const {
   updateStatusContact,
 } = require("../../controllers/contactsControllers");
 
-router.get("/", tryCatchWrapper(getContacts));
+router.get("/", tryCatchWrapper(tokenValidation), tryCatchWrapper(getContacts));
 
-router.get("/:id", tryCatchWrapper(getContact));
+router.get(
+  "/:id",
+  tryCatchWrapper(tokenValidation),
+  tryCatchWrapper(getContact)
+);
 
 router.post(
   "/",
+  tryCatchWrapper(tokenValidation),
   validationCheck(newContactValidation),
   tryCatchWrapper(createContact)
 );
 
-router.delete("/:id", tryCatchWrapper(deleteContact));
+router.delete(
+  "/:id",
+  tryCatchWrapper(tokenValidation),
+  tryCatchWrapper(deleteContact)
+);
 
 router.put(
   "/:id",
+  tryCatchWrapper(tokenValidation),
   validationCheck(updateContactValidation),
   tryCatchWrapper(updateContact)
 );
 router.patch(
   "/:id/favorite",
+  tryCatchWrapper(tokenValidation),
   validationCheck(updateStatusContactValidation),
   tryCatchWrapper(updateStatusContact)
 );
