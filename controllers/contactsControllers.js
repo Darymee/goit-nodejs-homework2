@@ -26,9 +26,16 @@ async function getContact(req, res, next) {
 }
 
 async function createContact(req, res, next) {
+  const { _id } = req.user;
   const { name, email, phone, favorite } = req.body;
 
-  const newContact = await Contact.create({ name, email, phone, favorite });
+  const newContact = await Contact.create({
+    name,
+    email,
+    phone,
+    favorite,
+    owner: _id,
+  });
   return res.status(201).json(newContact);
 }
 
