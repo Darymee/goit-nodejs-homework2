@@ -5,6 +5,8 @@ const {
   tryCatchWrapper,
   validationCheck,
   tokenValidation,
+  upload,
+  resizeAvatar,
 } = require("../../middlewares");
 
 const {
@@ -19,6 +21,7 @@ const {
   logout,
   getCurrentUser,
   updateSubscription,
+  updateAvatar,
 } = require("../../controllers/userControllers");
 
 authRouter.post(
@@ -49,6 +52,14 @@ authRouter.patch(
   tryCatchWrapper(tokenValidation),
   validationCheck(updateSubscriptionValidation),
   tryCatchWrapper(updateSubscription)
+);
+
+authRouter.patch(
+  "/avatars",
+  tryCatchWrapper(tokenValidation),
+  upload.single("avatar"),
+  tryCatchWrapper(resizeAvatar),
+  tryCatchWrapper(updateAvatar)
 );
 
 module.exports = authRouter;
