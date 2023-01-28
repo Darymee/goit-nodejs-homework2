@@ -1,15 +1,24 @@
 const { User } = require("../models/users");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const gravatar = require("gravatar");
+
+const path = require("path");
+const fs = require("fs/promises");
 
 async function register(req, res, next) {
   const { email, password } = req.body;
 
   const salt = await bcrypt.genSalt();
   const hashedPassword = await bcrypt.hash(password, salt);
+  const avatarURL = gravatar.url(email, { protocol: "https" });
 
   try {
-    const newUser = await User.create({ email, password: hashedPassword });
+    const newUser = await User.create({
+      email,
+      password: hashedPassword,
+      avatarURL,
+    });
 
     return res.status(201).json({
       user: {
@@ -121,10 +130,35 @@ async function updateSubscription(req, res, next) {
   return res.status(404).json({ message: "Invalid type of subscription" });
 }
 
+async function updateAvatar(req, res, next) {
+  const { filename } = req.file;
+  const tmpPath = path.resolve(__dirname, "../tmp", filename);
+  const publicPath = path.resolve(__dirname, "../public/avatars", filename);
+
+  try {
+    await fs.rename(tmpPath, publicPath);
+
+    const userId = req.user._id;
+
+    const avatarURL = `/avatars/${filename}`;
+
+    const updateAvatar = await User.findByIdAndUpdate(
+      userId,
+      { avatarURL },
+      { new: true }
+    );
+    return res.status(200).json({ avatarURL: updateAvatar.avatarURL });
+  } catch {
+    await fs.unlink(tmpPath);
+    return res.status(401).json({ message: "Not authorized" });
+  }
+}
+
 module.exports = {
   register,
   login,
   logout,
   getCurrentUser,
   updateSubscription,
+  updateAvatar,
 };

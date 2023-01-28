@@ -1,6 +1,10 @@
 const jwt = require("jsonwebtoken");
 const { User } = require("../models/users");
 
+const multer = require("multer");
+const path = require("path");
+const Jimp = require("jimp");
+
 function validationCheck(schema) {
   return (req, res, next) => {
     const { error } = schema.validate(req.body);
@@ -12,10 +16,10 @@ function validationCheck(schema) {
   };
 }
 
-function tryCatchWrapper(enpointFn) {
+function tryCatchWrapper(endpointFn) {
   return async (req, res, next) => {
     try {
-      await enpointFn(req, res, next);
+      await endpointFn(req, res, next);
     } catch (error) {
       return next(error);
     }
@@ -54,8 +58,37 @@ async function tokenValidation(req, res, next) {
   next();
 }
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.resolve(__dirname, "../tmp"));
+  },
+  filename: function (req, file, cb) {
+    cb(null, req.user._id + file.originalname);
+  },
+});
+
+const upload = multer({
+  storage,
+});
+
+async function resizeAvatar(req, res, next) {
+  const { path } = req.file;
+  try {
+    const avatar = await Jimp.read(path);
+    const resizingAvatar = avatar.resize(250, 250);
+
+    await resizingAvatar.writeAsync(path);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+
+  next();
+}
+
 module.exports = {
   validationCheck,
   tryCatchWrapper,
   tokenValidation,
+  upload,
+  resizeAvatar,
 };
