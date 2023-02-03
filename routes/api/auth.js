@@ -13,6 +13,7 @@ const {
   newUserCreateValidation,
   userLoginValidation,
   updateSubscriptionValidation,
+  userMailVerifyValidation,
 } = require("../../schemas/user");
 
 const {
@@ -22,6 +23,8 @@ const {
   getCurrentUser,
   updateSubscription,
   updateAvatar,
+  verifyEmail,
+  reverifyEmail,
 } = require("../../controllers/userControllers");
 
 authRouter.post(
@@ -60,6 +63,14 @@ authRouter.patch(
   upload.single("avatar"),
   tryCatchWrapper(resizeAvatar),
   tryCatchWrapper(updateAvatar)
+);
+
+authRouter.get("/verify/:verificationToken", tryCatchWrapper(verifyEmail));
+
+authRouter.post(
+  "/verify",
+  validationCheck(userMailVerifyValidation),
+  tryCatchWrapper(reverifyEmail)
 );
 
 module.exports = authRouter;
