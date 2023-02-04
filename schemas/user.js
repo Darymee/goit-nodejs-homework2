@@ -14,8 +14,13 @@ const updateSubscriptionValidation = joi.object({
   subscription: joi.string().required(),
 });
 
+const userMailVerifyValidation = joi.object({
+  email: joi.string().required(),
+});
+
 module.exports = {
   newUserCreateValidation,
   userLoginValidation,
   updateSubscriptionValidation,
+  userMailVerifyValidation,
 };

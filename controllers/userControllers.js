@@ -1,7 +1,9 @@
 const { User } = require("../models/users");
 const bcrypt = require("bcrypt");
+const { v4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const gravatar = require("gravatar");
+const { sendMail } = require("../helpers/index");
 
 const path = require("path");
 const fs = require("fs/promises");
@@ -13,11 +15,20 @@ async function register(req, res, next) {
   const hashedPassword = await bcrypt.hash(password, salt);
   const avatarURL = gravatar.url(email, { protocol: "https" });
 
+  const verificationToken = v4();
+
   try {
     const newUser = await User.create({
       email,
       password: hashedPassword,
       avatarURL,
+      verificationToken,
+    });
+
+    await sendMail({
+      to: email,
+      subject: "Welcome to your service. Confirm your email",
+      html: `<a href="localhost:3000/users/verify/${verificationToken}">Please confirm your email address</a>`,
     });
 
     return res.status(201).json({
@@ -42,6 +53,11 @@ async function login(req, res, next) {
   if (!userToFind) {
     return res.status(401).json({
       message: "Email or password is wrong",
+    });
+  }
+  if (!userToFind.verify) {
+    return res.status(401).json({
+      message: "Email is not verify. Please check your mailbox",
     });
   }
 
@@ -154,6 +170,46 @@ async function updateAvatar(req, res, next) {
   }
 }
 
+async function verifyEmail(req, res, next) {
+  const { verificationToken } = req.params;
+
+  const userToFind = await User.findOne({ verificationToken });
+
+  if (!userToFind) {
+    return res.status(404).json({ message: "User is not found" });
+  }
+
+  await User.findByIdAndUpdate(userToFind._id, {
+    verify: true,
+    verificationToken: null,
+  });
+
+  return res.status(200).json({ message: "Verification successful" });
+}
+
+async function reverifyEmail(req, res, next) {
+  const { email } = req.body;
+
+  const userToFind = await User.findOne({ email });
+
+  if (!userToFind) {
+    return res.status(404).json({ message: "Email is not found" });
+  }
+
+  if (userToFind.verify) {
+    return res
+      .status(404)
+      .json({ message: "Verification has already been passed" });
+  }
+  await sendMail({
+    to: email,
+    subject: "Your email is still not verified. Confirm your email",
+    html: `<a href="localhost:3000/users/verify/${userToFind.verificationToken}">Please confirm your email address.</a>`,
+  });
+
+  return res.status(200).json({ message: "Verification email sent" });
+}
+
 module.exports = {
   register,
   login,
@@ -161,4 +217,6 @@ module.exports = {
   getCurrentUser,
   updateSubscription,
   updateAvatar,
+  verifyEmail,
+  reverifyEmail,
 };
